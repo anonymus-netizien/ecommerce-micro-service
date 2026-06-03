@@ -1,0 +1,18 @@
+package com.stschool.ecommerce.productservice.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class TopProductsByCategoryDto {
+
+    private String category;
+    private List<ProductResponseDto> topProducts;
+}
