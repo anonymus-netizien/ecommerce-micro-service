@@ -88,18 +88,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductResponseDto> getAllProductsByAvailability(boolean isAvailable) {
-        if (isAvailable) {
-            return productRepository.findByStatus(ProductStatus.ACTIVE)
-                    .stream()
-                    .map(p -> modelMapper.map(p, ProductResponseDto.class))
-                    .toList();
-        } else {
-            return productRepository.findAll()
-                    .stream()
-                    .filter(p -> p.getStatus() != ProductStatus.ACTIVE)
-                    .map(p -> modelMapper.map(p, ProductResponseDto.class))
-                    .toList();
-        }
+        List<Product> products = isAvailable
+                ? productRepository.findAvailableProducts()
+                : productRepository.findUnavailableProducts();
+        return products.stream()
+                .map(p -> modelMapper.map(p, ProductResponseDto.class))
+                .toList();
     }
 
     @Override
@@ -138,7 +132,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public boolean areAllProductsAvailable() {
-        return productRepository.countByStatusNotActive() == 0;
+        return productRepository.countByStockZero() == 0;
     }
 
     @Override
@@ -199,7 +193,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductResponseDto> getAvailableProductsWithPriceGreaterThan(double price) {
-        return productRepository.findByStatusAndPriceGreaterThan(ProductStatus.ACTIVE, BigDecimal.valueOf(price))
+        return productRepository.findAvailableProductsByPriceGreaterThan(BigDecimal.valueOf(price))
                 .stream()
                 .map(p -> modelMapper.map(p, ProductResponseDto.class))
                 .toList();
@@ -240,13 +234,15 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Map<Boolean, List<ProductResponseDto>> partitionByAvailability() {
-        return productRepository.findAll()
+        List<ProductResponseDto> available = productRepository.findAvailableProducts()
                 .stream()
-                .collect(Collectors.partitioningBy(
-                        p -> p.getStatus() == ProductStatus.ACTIVE,
-                        Collectors.mapping(p -> modelMapper.map(p, ProductResponseDto.class),
-                                Collectors.toList())
-                ));
+                .map(p -> modelMapper.map(p, ProductResponseDto.class))
+                .toList();
+        List<ProductResponseDto> unavailable = productRepository.findUnavailableProducts()
+                .stream()
+                .map(p -> modelMapper.map(p, ProductResponseDto.class))
+                .toList();
+        return Map.of(true, available, false, unavailable);
     }
 
     @Override

@@ -18,8 +18,6 @@ import java.util.List;
 public class JwtUtil {
 
     private static final String ROLE_TAG = "role";
-    private static final String ISSUED_DATE_TAG = "issued-date";
-    private static final String TOKEN_ISSUER = "st-school";
 
     @Value("${jwt.secret}")
     private String SECRET;

@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,5 +12,5 @@ import java.math.BigDecimal;
 public class CategoryAveragePriceDto {
 
     private String category;
-    private BigDecimal avgPrice;
+    private Double avgPrice;
 }

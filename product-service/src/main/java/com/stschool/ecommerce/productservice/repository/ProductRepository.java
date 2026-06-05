@@ -23,25 +23,39 @@ public interface ProductRepository extends MongoRepository<Product, String> {
 
     Optional<Product> findTopByStatus(ProductStatus status);
 
-    @Query("{ 'status': ?0 }")
-    List<Product> findByStatus(ProductStatus status);
-
     @Query("{ 'category': ?0 }")
     List<Product> findByCategory(String category);
 
+    // --- Stock-based availability queries ---
+
+    @Query(value = "{ 'stockQuantity': { $gt: 0 } }")
+    List<Product> findAvailableProducts();
+
+    @Query(value = "{ 'stockQuantity': 0 }")
+    List<Product> findUnavailableProducts();
+
+    @Query(value = "{ 'stockQuantity': { $gt: 0 }, 'price': { $gt: ?0 } }")
+    List<Product> findAvailableProductsByPriceGreaterThan(BigDecimal price);
+
+    // --- Price queries with explicit @Query for correct BigDecimal comparison ---
+
+    @Query(value = "{ 'price': { $gt: ?0 } }")
     List<Product> findByPriceGreaterThan(BigDecimal price);
 
+    @Query(value = "{ 'price': { $gt: ?0 } }", sort = "{ 'price': -1 }")
     List<Product> findByOrderByPriceDesc(PageRequest pageable);
 
+    @Query(value = "{}", sort = "{ 'price': 1 }")
     List<Product> findByOrderByPriceAsc();
 
+    @Query(value = "{}", sort = "{ 'name': -1 }")
     List<Product> findByOrderByNameDesc();
 
+    @Query(value = "{}", sort = "{ 'price': -1 }")
     Optional<Product> findTopByOrderByPriceDesc();
 
+    @Query(value = "{}", sort = "{ 'price': 1 }")
     Optional<Product> findTopByOrderByPriceAsc();
-
-    List<Product> findByStatusAndPriceGreaterThan(ProductStatus status, BigDecimal price);
 
     List<Product> findByManufacturedYearAfter(int year);
 
@@ -50,10 +64,10 @@ public interface ProductRepository extends MongoRepository<Product, String> {
     @Query(value = "{ 'company': { $regex: ?0, $options: 'i' } }", exists = true)
     boolean existsByCompany(String company);
 
-    // --- Count of non-active products (for areAllProductsAvailable check) ---
+    // --- Count of unavailable products (stockQuantity == 0) ---
 
-    @Query(value = "{ 'status': { $ne: 'ACTIVE' } }", count = true)
-    long countByStatusNotActive();
+    @Query(value = "{ 'stockQuantity': 0 }", count = true)
+    long countByStockZero();
 
     // --- Projection: product names only ---
 
@@ -76,10 +90,10 @@ public interface ProductRepository extends MongoRepository<Product, String> {
     })
     List<CategoryAveragePrice> averagePriceByCategory();
 
-    // --- Aggregation: total inventory value ---
+    // --- Aggregation: total inventory value (price * stockQuantity) ---
 
     @Aggregation(pipeline = {
-            "{ $group: { _id: null, total: { $sum: '$price' } } }",
+            "{ $group: { _id: null, total: { $sum: { $multiply: ['$price', '$stockQuantity'] } } } }",
             "{ $project: { _id: 0, total: 1 } }"
     })
     List<TotalInventoryValue> totalInventoryValue();
@@ -88,7 +102,7 @@ public interface ProductRepository extends MongoRepository<Product, String> {
 
     @Aggregation(pipeline = {
             "{ $sort: { price: -1 } }",
-            "{ $group: { _id: '$category', products: { $push: '$$ROOT' } } }",
+            "{ $group: { _id: '$category', products: { $push: { 'id': '$_id', 'name': '$name', 'price': '$price', 'stockQuantity': '$stockQuantity', 'category': '$category', 'company': '$company', 'status': '$status', 'description': '$description', 'manufacturedYear': '$manufacturedYear' } } } }",
             "{ $project: { _id: 0, category: '$_id', topProducts: { $slice: ['$products', 3] } } }"
     })
     List<TopProductsByCategory> topThreeMostExpensiveByCategory();
