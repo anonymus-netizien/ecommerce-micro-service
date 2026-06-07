@@ -1,8 +1,9 @@
 spring:
   application:
     name: PRODUCT-SERVICE
-  mongodb:
-    uri: mongodb://localhost:27017/products_db
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/products_service
 
 eureka:
   client:
