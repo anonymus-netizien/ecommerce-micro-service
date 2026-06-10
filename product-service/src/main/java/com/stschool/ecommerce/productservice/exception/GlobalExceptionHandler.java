@@ -1,5 +1,6 @@
 package com.stschool.ecommerce.productservice.exception;
 
+import com.stschool.ecommerce.productservice.dto.response.ApiResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -15,31 +16,57 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<String> handleProductNotFoundException(ProductNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    public ResponseEntity<ApiResponseDto<Void>> handleProductNotFoundException(ProductNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                ApiResponseDto.<Void>builder()
+                        .success(false)
+                        .message(e.getMessage())
+                        .status(HttpStatus.NOT_FOUND.value())
+                        .build());
     }
 
     @ExceptionHandler(ProductExistsException.class)
-    public ResponseEntity<String> handleProductExistsException(ProductExistsException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    public ResponseEntity<ApiResponseDto<Void>> handleProductExistsException(ProductExistsException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiResponseDto.<Void>builder()
+                        .success(false)
+                        .message(e.getMessage())
+                        .status(HttpStatus.CONFLICT.value())
+                        .build());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationException(MethodArgumentNotValidException e) {
+    public ResponseEntity<ApiResponseDto<Map<String, String>>> handleValidationException(MethodArgumentNotValidException e) {
         Map<String, String> errors = new HashMap<>();
         for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ApiResponseDto.<Map<String, String>>builder()
+                        .success(false)
+                        .message("Validation failed")
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .data(errors)
+                        .build());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<String> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid value for field: " + e.getName());
+    public ResponseEntity<ApiResponseDto<Void>> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ApiResponseDto.<Void>builder()
+                        .success(false)
+                        .message("Invalid value for field: " + e.getName())
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .build());
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleException(Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    public ResponseEntity<ApiResponseDto<Void>> handleException(Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ApiResponseDto.<Void>builder()
+                        .success(false)
+                        .message(e.getMessage())
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .build());
     }
 }

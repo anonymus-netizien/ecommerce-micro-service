@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface TopProductsByCategory {
     String getCategory();
+
     List<Product> getTopProducts();
 }
