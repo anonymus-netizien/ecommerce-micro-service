@@ -2,6 +2,7 @@ package com.stschool.ecommerce.userservice.controller;
 
 import com.stschool.ecommerce.userservice.dto.request.LoginRequestDto;
 import com.stschool.ecommerce.userservice.dto.request.UserRequestDto;
+import com.stschool.ecommerce.userservice.dto.response.ApiResponseDto;
 import com.stschool.ecommerce.userservice.dto.response.AuthResponseDto;
 import com.stschool.ecommerce.userservice.dto.response.UserResponseDto;
 import com.stschool.ecommerce.userservice.exception.InvalidCredentialsException;
@@ -25,14 +26,26 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequestDto)
+    public ResponseEntity<ApiResponseDto<AuthResponseDto>> login(@Valid @RequestBody LoginRequestDto loginRequestDto)
             throws UserNotFoundException, InvalidCredentialsException {
-        return ResponseEntity.ok(authService.login(loginRequestDto));
+        return ResponseEntity.ok(
+                ApiResponseDto.<AuthResponseDto>builder()
+                        .success(true)
+                        .message("Login successful")
+                        .status(HttpStatus.OK.value())
+                        .data(authService.login(loginRequestDto))
+                        .build());
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<UserResponseDto> signup(@Valid @RequestBody UserRequestDto signupRequestDto)
+    public ResponseEntity<ApiResponseDto<UserResponseDto>> signup(@Valid @RequestBody UserRequestDto signupRequestDto)
             throws UserExistsException {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(signupRequestDto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponseDto.<UserResponseDto>builder()
+                        .success(true)
+                        .message("User registered successfully")
+                        .status(HttpStatus.CREATED.value())
+                        .data(authService.signup(signupRequestDto))
+                        .build());
     }
 }
