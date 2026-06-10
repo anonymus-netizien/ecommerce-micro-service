@@ -12,8 +12,5 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
 
-jwt:
-  secret: jwt-secret-code
-
 server:
   port: 8091
